@@ -12,8 +12,8 @@ you have compiled foundationdb using the provided docker image, i.e.,
 To compile, enter the docker image
 
 ```bash
- $ docker run --name DOCKERCONTAINER-36563  -v /Users/$USER/fdb/fdb-tools/scripts/../..:/opt/foundation:delegated -e FDB_TLS_PLUGIN=/opt/foundation/foundationdb/tls-plugins/FDBGnuTLS.so -e LOGNAME=$USER -e CCACHE_DIR=/opt/foundation/.ccache -e PYTHONPATH=/opt/foundation/foundationdb/bindings/python -e GOPATH=/opt/go -e LD_LIBRARY_PATH=/opt/foundation/foundationdb/lib -e LIBRARY_PATH=/usr/local/lib -e TLS_LIBDIR=/usr/local/lib -w /opt/foundation -u root --rm --init --privileged -it -e CC=/opt/x-toolchain/bin/x86_64-nptl-linux-gnu-gcc -e CXX=/opt/x-toolchain/bin/x86_64-nptl-linux-gnu-g++ docker.apple.com/cie_fdb/foundationdb-dev:0.8.7 bash
- root@fce4696cc1b9:/opt/foundation# cd foundationdb/flow-examples/
+$ docker run --name DOCKERCONTAINER-36563  -v /Users/$USER/fdb/fdb-tools/scripts/../..:/opt/foundation:delegated -e FDB_TLS_PLUGIN=/opt/foundation/foundationdb/tls-plugins/FDBGnuTLS.so -e LOGNAME=$USER -e CCACHE_DIR=/opt/foundation/.ccache -e PYTHONPATH=/opt/foundation/foundationdb/bindings/python -e GOPATH=/opt/go -e LD_LIBRARY_PATH=/opt/foundation/foundationdb/lib -e LIBRARY_PATH=/usr/local/lib -e TLS_LIBDIR=/usr/local/lib -w /opt/foundation -u root --rm --init --privileged -it -e CC=/opt/x-toolchain/bin/x86_64-nptl-linux-gnu-gcc -e CXX=/opt/x-toolchain/bin/x86_64-nptl-linux-gnu-g++ docker.apple.com/cie_fdb/foundationdb-dev:0.8.7 bash
+root@fce4696cc1b9:/opt/foundation# cd foundationdb/flow-examples/
 root@fce4696cc1b9:/opt/foundation/foundationdb/flow-examples# make
 ```
 
@@ -39,22 +39,74 @@ make: *** [hello] Error 1
 
 Seems this can be solved by putting a modified "flow" directory under "examples". Not sure why?
 
+TODO: add modified "flow"?
+
 ## Examples
 
 ### hello.cpp
 
 ```c++
-#include "flow/flow.h"
-
-#include <iostream>
-#include <string>
-using namespace std;
-
-int main(int argc, char **argv) {
+void hello() {
   Promise<string> p;
   Future<string> f = p.getFuture();
   p.send( "Hello, World!" );
   cout<< f.get() << endl; // f is already set
 }
+
+void hello2() {
+  Promise<string> p;
+  Future<string> f = p.getFuture();
+  cout << "Before send: promise isSet = " << p.isSet() << ", future.isReady = "
+       << f.isReady() << endl;
+  p.send( "Hello, World!" );
+  cout << "After send: promise isSet = " << p.isSet() << ", future.isReady = "
+       << f.isReady() << endl;
+  cout<< f.get() << endl; // f is already set
+}
 ```
 
+The output for the above code is:
+
+```shell
+# ./hello
+Running test hello
+Hello, World!
+
+Running test hello2
+Before send: promise isSet = 0, future.isReady = 0
+After send: promise isSet = 1, future.isReady = 1
+Hello, World!
+
+```
+
+In hellow2(), before sending the value, the future "f" is not ready. "f" only
+becomes ready after Promise sends the value.
+
+### calc.cpp & calc.actor.cpp
+
+The ACTOR waits for "f", then does the computation, and finally returns a future.
+
+```c++
+ACTOR Future<int> asyncAdd(Future<int> f, int offset) {
+    int value = wait( f );
+    return value + offset;
+}
+```
+
+The main function in calc.cpp shows that we can have the future of this asyncAdd,
+which only becomes available after "p" sends a value to "f".
+
+```c++
+int main(int argc, char** argv) {
+  Promise<int> p;
+  Future<int> f = p.getFuture();
+  Future<int> result = asyncAdd(f, 10);
+  cout << "Future f.isReady = " << f.isReady() << ", result.isReady = " 
+       << result.isReady() << endl;
+  p.send( 5 );
+  cout << "Send 5 to f" << endl;
+  cout << "Result is " << result.get() << endl; // f is already set
+
+  return 0;
+}
+```

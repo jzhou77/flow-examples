@@ -4,13 +4,15 @@ ifeq ($(PLATFORM),Linux)
 # set for docker image
 CC = /opt/x-toolchain/bin/x86_64-nptl-linux-gnu-gcc
 CXX=/opt/x-toolchain/bin/x86_64-nptl-linux-gnu-g++
+MONO=/usr/bin/mono
 BOOSTDIR=/opt/boost_1_52_0
 FDB=/opt/foundation/foundationdb
+ACTORCOMPILER=$(FDB)/bin/actorcompiler.exe
 
 CFLAGS += 
 CXXFLAGS += -std=c++0x
 INCLUDE = -I$(BOOSTDIR) -I$(FDB)
-LFLAGS = /opt/foundation/foundationdb/lib/libflow.a /opt/foundation/foundationdb/lib/libfdb_flow.a -Bstatic -ldl -lpthread -lrt -lfdb_c -Bdynamic  /opt/x-toolchain/x86_64-nptl-linux-gnu/lib64/libstdc++.a -lm
+LFLAGS = $(FDB)/lib/libflow.a $(FDB)/lib/libfdb_flow.a -Bstatic -ldl -lpthread -lrt -lfdb_c -Bdynamic  /opt/x-toolchain/x86_64-nptl-linux-gnu/lib64/libstdc++.a -lm
 LDFLAGS = -L/usr/local/lib -L$(FDB)/lib -L/opt/x-toolchain/x86_64-nptl-linux-gnu/lib64/
 
 
@@ -26,12 +28,26 @@ INCLUDE = -I. -Iboost_1_52_0
 CXXFLAGS += -std=c++11 -msse4.2 -Wno-undefined-var-template -Wno-unknown-warning-option
 endif
 
-TARGETS = hello
+TARGETS = hello calc
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
 
+%.actor.g.cpp: %.actor.cpp $(ACTORCOMPILER)
+	@echo "Actorcompiling $<"
+	@$(MONO) $(ACTORCOMPILER) $< $@
+.PRECIOUS: %.actor.g.cpp
+
 hello: hello.o
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $< $(LFLAGS) -o $@ $(LDFLAGS)
 
+calc: calc.o calc.actor.g.o
+	$(CXX) $(CXXFLAGS) $^ -o $@ $(LFLAGS) $(LDFLAGS)
+
+
 all: $(TARGETS)
+
+clean:
+	@rm *.o $(TARGETS)
+
+.PHONY: all clean
