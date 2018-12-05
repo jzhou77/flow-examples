@@ -110,3 +110,12 @@ int main(int argc, char** argv) {
   return 0;
 }
 ```
+
+The output looks like this:
+
+```shell
+root@fce4696cc1b9:/opt/foundation/foundationdb/flow-examples# ./calc 
+Future f.isReady = 0, result.isReady = 0
+Send 5 to f
+Result is 15
+```
