@@ -1,6 +1,6 @@
 # Flow Examples
 
-Examples for using flow language developed in FoundationDB project. These 
+Examples for using flow language developed in FoundationDB project. These
 examples are intended to learn the basics of the language.
 
 ## Compile
@@ -20,7 +20,6 @@ root@fce4696cc1b9:/opt/foundation/foundationdb/flow-examples# make
 Compilation on other platforms have not been attempted.
 
 ### Compilation Problems
-
 
 ```bash
 root@fce4696cc1b9:/opt/foundation/foundationdb/examples# make
@@ -101,7 +100,7 @@ int main(int argc, char** argv) {
   Promise<int> p;
   Future<int> f = p.getFuture();
   Future<int> result = asyncAdd(f, 10);
-  cout << "Future f.isReady = " << f.isReady() << ", result.isReady = " 
+  cout << "Future f.isReady = " << f.isReady() << ", result.isReady = "
        << result.isReady() << endl;
   p.send( 5 );
   cout << "Send 5 to f" << endl;
@@ -114,7 +113,7 @@ int main(int argc, char** argv) {
 The output looks like this:
 
 ```shell
-root@fce4696cc1b9:/opt/foundation/foundationdb/flow-examples# ./calc 
+root@fce4696cc1b9:/opt/foundation/foundationdb/flow-examples# ./calc
 Future f.isReady = 0, result.isReady = 0
 Send 5 to f
 Result is 15

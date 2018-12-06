@@ -1,11 +1,9 @@
-#include "flow/flow.h"
-
 #include <iostream>
 #include <string>
-using namespace std;
+#include "test.h"
+#include "flow/flow.h"
 
-#define RUN_TEST(FUNC) do { cout <<  "Running test " << #FUNC << endl; FUNC();\
-                            cout << endl; } while (0)
+using namespace std;
 
 void hello() {
   Promise<string> p;

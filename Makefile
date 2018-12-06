@@ -28,7 +28,7 @@ INCLUDE = -I. -Iboost_1_52_0
 CXXFLAGS += -std=c++11 -msse4.2 -Wno-undefined-var-template -Wno-unknown-warning-option
 endif
 
-TARGETS = hello calc
+TARGETS = hello calc void
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
@@ -38,14 +38,16 @@ TARGETS = hello calc
 	@$(MONO) $(ACTORCOMPILER) $< $@
 .PRECIOUS: %.actor.g.cpp
 
+all: $(TARGETS)
+
 hello: hello.o
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $< $(LFLAGS) -o $@ $(LDFLAGS)
 
 calc: calc.o calc.actor.g.o
 	$(CXX) $(CXXFLAGS) $^ -o $@ $(LFLAGS) $(LDFLAGS)
 
-
-all: $(TARGETS)
+void: void.o void.actor.g.o
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ $(LFLAGS) -o $@ $(LDFLAGS)
 
 clean:
 	@rm *.o $(TARGETS)
