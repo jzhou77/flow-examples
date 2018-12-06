@@ -44,7 +44,7 @@ TODO: add modified "flow"?
 
 ### hello.cpp
 
-```c++
+```cpp
 void hello() {
   Promise<string> p;
   Future<string> f = p.getFuture();
@@ -85,7 +85,7 @@ becomes ready after Promise sends the value.
 
 The ACTOR waits for "f", then does the computation, and finally returns a future.
 
-```c++
+```cpp
 ACTOR Future<int> asyncAdd(Future<int> f, int offset) {
     int value = wait( f );
     return value + offset;
@@ -95,7 +95,7 @@ ACTOR Future<int> asyncAdd(Future<int> f, int offset) {
 The main function in calc.cpp shows that we can have the future of this asyncAdd,
 which only becomes available after "p" sends a value to "f".
 
-```c++
+```cpp
 int main(int argc, char** argv) {
   Promise<int> p;
   Future<int> f = p.getFuture();
@@ -117,4 +117,188 @@ root@fce4696cc1b9:/opt/foundation/foundationdb/flow-examples# ./calc
 Future f.isReady = 0, result.isReady = 0
 Send 5 to f
 Result is 15
+```
+
+So it's clear that asyncAdd() is not blocking.
+
+### void.cpp & void.actor.cpp
+
+```cpp
+void test1() {
+  Future<Void> f = Void(), n = Never();
+  cout << "f = Void(), f.isReady() = " << f.isReady() << endl;
+  cout << "n = Never(), n.isReady() = " << f.isReady() << endl;
+}
+
+void test2() {
+  Future<Void> result = dummy();
+  cout << "result = dummy(), result.isReady() = " << result.isReady() << endl;
+}
+
+void test3() {
+  Future<Void> result = foo();
+  cout << "result = foo(), result.isReady() = " << result.isReady() << endl;
+}
+```
+
+In test1(), both "f" and "n" becomes immediately ready. In test2(), result is
+also ready. The output is:
+
+```bash
+root@fce4696cc1b9:/opt/foundation/foundationdb/flow-examples# ./void
+Running test test1
+f = Void(), f.isReady() = 1
+n = Never(), n.isReady() = 1
+
+Running test2...
+dummy onChange changed
+result = dummy(), result.isReady() = 1
+```
+
+The dummy() is defined as:
+
+```cpp
+ACTOR Future<Void> dummy() {
+  state Future<Void> onChange = Void();
+
+  loop choose {
+    when (wait(onChange)) {
+      cout << "onChange changed\n";
+      break;
+    }
+  }
+  return Void();
+}
+
+ACTOR Future<Void> foo() {
+  state Future<Void> onChange = dummy();
+
+  loop choose {
+    when (wait(onChange)) {
+      cout << "foo onChange changed\n";
+      break;
+    }
+  }
+  return Void();
+}
+```
+
+What happens if we change dummy() not use assign a value for "onChange"? I.e.,
+
+```c++
+ACTOR Future<Void> dummy() {
+  state Future<Void> onChange;
+...
+}
+```
+
+This will result in segfault:
+
+```bash
+root@fce4696cc1b9:/opt/foundation/foundationdb/flow-examples# gdb void
+GNU gdb (Ubuntu 7.9-1ubuntu1) 7.9
+Copyright (C) 2015 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>.
+Find the GDB manual and other documentation resources online at:
+<http://www.gnu.org/software/gdb/documentation/>.
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from void...done.
+(gdb) r
+Starting program: /opt/foundation/foundationdb/flow-examples/void
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+Running test1...
+f = Void(), f.isReady() = 1
+n = Never(), n.isReady() = 1
+
+Running test2...
+
+Program received signal SIGSEGV, Segmentation fault.
+0x0000000000410416 in Error::code (this=0x22) at /opt/foundation/foundationdb/flow/Error.h:43
+43		int code() const { return error_code; }
+(gdb) where
+#0  0x0000000000410416 in Error::code (this=0x22) at /opt/foundation/foundationdb/flow/Error.h:43
+#1  0x0000000000411c94 in SAV<Void>::isSet (this=0x0) at flow/flow.h:372
+#2  0x0000000000410cbf in Future<Void>::isReady (this=0x7fffffffe320) at flow/flow.h:605
+#3  0x0000000000416bbd in (anonymous namespace)::DummyActorState<(anonymous namespace)::DummyActor>::a_body1loopBody1 (this=0x7ffff7f49040, loopDepth=1) at void.actor.g.cpp:76
+#4  0x00000000004166f7 in (anonymous namespace)::DummyActorState<(anonymous namespace)::DummyActor>::a_body1loopHead1 (this=0x7ffff7f49040, loopDepth=1) at void.actor.g.cpp:65
+#5  0x0000000000415feb in (anonymous namespace)::DummyActorState<(anonymous namespace)::DummyActor>::a_body1 (this=0x7ffff7f49040, loopDepth=0) at void.actor.g.cpp:32
+#6  0x0000000000415543 in (anonymous namespace)::DummyActor::DummyActor (this=0x7ffff7f49000) at void.actor.g.cpp:158
+#7  0x00000000004155e1 in dummy () at void.actor.cpp:7
+#8  0x000000000040e744 in test2 () at void.cpp:17
+#9  0x000000000040e822 in main (argc=1, argv=0x7fffffffe558) at void.cpp:23
+```
+
+Inspect void.actor.g.cpp, it's the "__when_expr_0.isReady()" generating the
+error, where "sav" of Future class is nullptr.
+
+```cpp
+	int a_body1loopBody1(int loopDepth)
+	{
+															#line 11 "void.actor.cpp"
+		StrictFuture<Void> __when_expr_0 = onChange;
+															#line 10 "void.actor.cpp"
+		if (static_cast<DummyActor*>(this)->actor_wait_state < 0) return a_body1Catch1(actor_cancelled(), std::max(0, loopDepth - 1));
+															#line 76 "void.actor.g.cpp"
+		if (__when_expr_0.isReady()) { if (__when_expr_0.isError()) return a_body1Catch1(__when_expr_0.getError(), std::max(0, loopDepth - 1)); else return a_body1loopBody1when1(__when_expr_0.get(), loopDepth); };
+		static_cast<DummyActor*>(this)->actor_wait_state = 1;
+															#line 11 "void.actor.cpp"
+		__when_expr_0.addCallbackAndClear(static_cast<ActorCallback< DummyActor, 0, Void >*>(static_cast<DummyActor*>(this)));
+															#line 81 "void.actor.g.cpp"
+		loopDepth = 0;
+
+		return loopDepth;
+	}
+```
+
+This seems to be a nice property: all the state variables of type Future should
+be initialized (be a static one like Void() or returned by another actor).
+test3() shows a composition of these two actors.
+
+test4() and test5() show that if Never() is used. The future is NOT set:
+
+```cpp
+void test4() {
+  Future<Void> result = never();
+  cout << "result = never(), result.isReady() = " << result.isReady() << endl;
+}
+
+void test5() {
+  const int not_used = 1;
+  Future<Void> result = never2(not_used);
+  cout << "result = never2(), result.isReady() = " << result.isReady() << endl;
+}
+
+ACTOR Future<Void> never() {
+  wait( Future<Void>(Never()) );
+  return Void();
+}
+
+ACTOR Future<Void> never2(int select) {
+  loop {
+    state Future<Void> reg = Never();
+
+    choose {
+      when( wait( reg )) { break; }
+    }
+  }
+  return Void();
+}
+```
+
+Results:
+```bash
+Running test4...
+result = never(), result.isReady() = 0
+
+Running test5...
+result = never2(), result.isReady() = 0
 ```

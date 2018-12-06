@@ -10,7 +10,7 @@ FDB=/opt/foundation/foundationdb
 ACTORCOMPILER=$(FDB)/bin/actorcompiler.exe
 
 CFLAGS += 
-CXXFLAGS += -std=c++0x
+CXXFLAGS += -std=c++0x -g
 INCLUDE = -I$(BOOSTDIR) -I$(FDB)
 LFLAGS = $(FDB)/lib/libflow.a $(FDB)/lib/libfdb_flow.a -Bstatic -ldl -lpthread -lrt -lfdb_c -Bdynamic  /opt/x-toolchain/x86_64-nptl-linux-gnu/lib64/libstdc++.a -lm
 LDFLAGS = -L/usr/local/lib -L$(FDB)/lib -L/opt/x-toolchain/x86_64-nptl-linux-gnu/lib64/
@@ -25,7 +25,7 @@ LDFLAGS := -lflow -framework IOKit -framework CoreFoundation
 LFLAGS += -Lflow -F /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk/System/Library/Frameworks/IOKit.framework/
 
 INCLUDE = -I. -Iboost_1_52_0
-CXXFLAGS += -std=c++11 -msse4.2 -Wno-undefined-var-template -Wno-unknown-warning-option
+CXXFLAGS += -g -std=c++11 -msse4.2 -Wno-undefined-var-template -Wno-unknown-warning-option
 endif
 
 TARGETS = hello calc void
