@@ -25,11 +25,14 @@ ACTOR Future<Void> foo() {
       break;
     }
   }
+  cout << "foo returned.\n";
   return Void();
 }
 
 ACTOR Future<Void> never() {
   wait( Future<Void>(Never()) );
+  // Not reached, because wiat() never returns.
+  cout << "never returned.\n";
   return Void();
 }
 
@@ -41,5 +44,7 @@ ACTOR Future<Void> never2(int select) {
       when( wait( reg )) { break; }
     }
   }
+  // Not reached, because "reg" never breaks from the loop
+  cout << "never2 returned.\n";
   return Void();
 }
