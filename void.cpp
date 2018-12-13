@@ -9,6 +9,9 @@ Future<Void> dummy();
 Future<Void> foo();
 Future<Void> never();
 Future<Void> never2(int const& i);
+Future<Void> throw1(bool const& b);
+Future<Void> throw2(bool const& b);
+Future<Void> throw3(bool const& b);
 
 void test1() {
   Future<Void> f = Void(), n = Never();
@@ -37,6 +40,20 @@ void test5() {
   cout << "result = never2(), result.isReady() = " << result.isReady() << endl;
 }
 
+void test_throw1() {
+  Future<Void> result = throw1(true);
+  cout << "result = throw1(true), result.isReady() = " << result.isReady() << endl;
+}
+
+void test_throw2() {
+  Future<Void> result = throw2(true);
+  cout << "result = throw2(true), result.isReady() = " << result.isReady() << endl;
+}
+void test_throw3() {
+  Future<Void> result = throw3(true);
+  cout << "result = throw3(true), result.isReady() = " << result.isReady() << endl;
+}
+
 int main(int argc, char **argv) {
   RUN_TEST(test1);
   RUN_TEST(test2);
@@ -44,5 +61,8 @@ int main(int argc, char **argv) {
   RUN_TEST(test4);
   RUN_TEST(test5);
 
+  RUN_TEST(test_throw1);
+  RUN_TEST(test_throw2);
+  RUN_TEST(test_throw3);
   return 0;
 }

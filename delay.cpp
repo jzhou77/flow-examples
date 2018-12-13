@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
   g_network = newNet2( NetworkAddress(), false );
 
   RUN_TEST(delayTest);
-  cout << "delayTest running...\n";
+  cout << "delayTest running... (expecting 5s delay)\n";
   g_network->run();
   cout << "delayTest existing...\n";
 

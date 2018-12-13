@@ -48,3 +48,25 @@ ACTOR Future<Void> never2(int select) {
   cout << "never2 returned.\n";
   return Void();
 }
+
+ACTOR Future<Void> throw1(bool b) {
+	if (b)
+		throw future_version();
+	return Void();
+}
+
+ACTOR void throw2(bool b) {
+	if (b)
+		throw future_version();
+}
+
+ACTOR Future<Void> throw3(bool b) {
+	try {
+		if (b)
+			throw future_version();
+	} catch (Error&) {
+		return Void();
+	}
+	printf("\nactorTest3 failed\n");
+	return Void();
+}

@@ -52,6 +52,9 @@ void: void.o void.actor.g.o
 delay: delay.o delay.actor.g.o
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ $(LFLAGS) -o $@ $(LDFLAGS)
 
+dsltest: dsltest.o dsltest.actor.g.o
+	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ $(LFLAGS) -o $@ $(LDFLAGS)
+
 clean:
 	@rm *.o $(TARGETS)
 
