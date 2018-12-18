@@ -345,3 +345,74 @@ struct SAV {
 	}
 
 ```
+
+### Introducing g_network and delay() (See delay.cpp & delay.actor.cpp)
+
+Sometimes we want the actor to perform an action after a time delay. The flow
+language provides a delay() function for that (flow/flow.h):
+
+```cpp
+inline double now() { return g_network->now(); }
+inline Future<Void> delay(double seconds, int taskID = TaskDefaultDelay) { return g_network->delay(seconds, taskID); }
+inline Future<Void> delayUntil(double time, int taskID = TaskDefaultDelay) { return g_network->delay(std::max(0.0, time - g_network->now()), taskID); }
+```
+
+So the delay() is internally managed by g_network, which can be viewed as an
+event manager. As a result, the main() needs to initialze it (delay.cpp):
+
+```cpp
+int main(int argc, char **argv) {
+  int randomSeed = platform::getRandomSeed();
+  g_random = new DeterministicRandom(randomSeed);
+  g_nondeterministic_random = new DeterministicRandom(platform::getRandomSeed());
+  g_network = newNet2( NetworkAddress(), false );
+
+  RUN_TEST(delayTest);
+  cout << "delayTest running... (expecting 5s delay)\n";
+  g_network->run();
+  cout << "delayTest existing...\n";
+
+  return 0;
+}
+```
+
+Note the "g_network->run()" is the event handling loop, which is called before
+the code exits main().
+
+In the delayTest() actor, a call to "g_network->stop()" causes the event loop
+to exit.
+
+```cpp
+ACTOR Future<Void> delay_five() {
+  state Future<Void> reg = Never();
+  state Future<Void> onChange = Void();
+  loop choose {
+    when( wait( reg )) { break; }
+    when( wait( onChange ) ) {
+      wait( delay(5) );
+      break;
+    }    
+  }
+  cout << "delay_five returned.\n";
+  return Void();
+}
+
+ACTOR void delayTest() {
+  wait( delay_five() );
+  cout << "ACTOR delayTest done...\n" << endl;
+  g_network->stop();
+}
+```
+
+Results are:
+
+```bash
+# ./delay 
+Running delayTest...
+
+delayTest running... (expecting 5s delay)
+delay_five returned.
+ACTOR delayTest done...
+
+delayTest existing...
+```
