@@ -1,13 +1,13 @@
 # Flow Examples
 
-Examples for using flow language developed in FoundationDB project. These
+Examples for using [flow language](https://github.com/apkar/foundationdb/tree/master/flow) developed in FoundationDB project. These
 examples are intended to learn the basics of the language.
 
 ## Compile
 
 This assumes that you have put the directory under the foundationdb folder and
 you have compiled foundationdb using the provided docker image, i.e.,
-"build/Dockerfile".
+"[build/Dockerfile](https://github.com/apkar/foundationdb/blob/master/build/Dockerfile)".
 
 To compile, enter the docker image
 
@@ -407,7 +407,7 @@ ACTOR void delayTest() {
 Results are:
 
 ```bash
-# ./delay 
+# ./delay
 Running delayTest...
 
 delayTest running... (expecting 5s delay)
