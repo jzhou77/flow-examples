@@ -11,8 +11,9 @@ ACTOR Future<Void> infinite_loop() {
   loop choose {
     when( wait( delay(0.01) ) ) { break; }
     when( wait( onChange ) ) {
+      // onChange = Never();
       count++;
-      if (count % 1000 == 1) {
+      if (count % 1000 == 0) {
         std::cout << "Loop count " << count << std::endl;
       }
     }
