@@ -416,3 +416,42 @@ ACTOR delayTest done...
 
 delayTest existing...
 ```
+
+
+## Common Pitfalls
+
+Here are some mistakes I have made when using flow.
+
+### Forget to overwrite Future with Never()
+
+A common pattern in flow is a loop waiting on several futures. Whenever a
+future is ready, we perform an action. It's very important to reset the future
+inside the action block.
+
+```cpp
+ACTOR Future<Void> infinite_loop() {
+  state Future<Void> onChange = Void();
+  state int count = 0;
+
+  loop choose {
+    when( wait( delay(0.01) ) ) { break; }
+    when( wait( onChange ) ) {
+      count++;
+      if (count % 1000 == 1) {
+        std::cout << "Loop count " << count << std::endl;
+      }
+    }
+  }
+  cout << "loop returned.\n";
+  return Void();
+}
+```
+
+In the above example, instead of existing after 0.01 seconds, there is an
+infinite loop printing out messages. Run the "loop" example to see the output.
+
+The reason is "onChange" is set to a Void outside the loop, so the first time
+inside the loop, the condition "wait(onChange)" immediately returns. Inside the
+block, "onChange" is not reset to Never() or another future. As a result, the
+next run of the loop sees "onChange" and enter the block again and again. This
+causes an infinite loop and we never exit the infinite_loop().
