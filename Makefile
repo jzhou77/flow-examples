@@ -28,7 +28,7 @@ INCLUDE = -I. -Iboost_1_52_0
 CXXFLAGS += -g -std=c++11 -msse4.2 -Wno-undefined-var-template -Wno-unknown-warning-option
 endif
 
-TARGETS = hello calc void delay loop
+TARGETS = hello calc void loop
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
@@ -49,10 +49,7 @@ calc: calc.o calc.actor.g.o
 void: void.o void.actor.g.o
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ $(LFLAGS) -o $@ $(LDFLAGS)
 
-delay: delay.o delay.actor.g.o
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ $(LFLAGS) -o $@ $(LDFLAGS)
-
-loop: loop.o loop.actor.g.o
+loop: loop.o loop.actor.g.o delay.actor.g.o
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ $(LFLAGS) -o $@ $(LDFLAGS)
 
 dsltest: dsltest.o dsltest.actor.g.o

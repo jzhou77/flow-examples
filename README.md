@@ -346,7 +346,7 @@ struct SAV {
 
 ```
 
-### Introducing g_network and delay() (See delay.cpp & delay.actor.cpp)
+### Introducing g_network and delay() (See loop.cpp & delay.actor.cpp)
 
 Sometimes we want the actor to perform an action after a time delay. The flow
 language provides a delay() function for that (flow/flow.h):
@@ -358,7 +358,7 @@ inline Future<Void> delayUntil(double time, int taskID = TaskDefaultDelay) { ret
 ```
 
 So the delay() is internally managed by g_network, which can be viewed as an
-event manager. As a result, the main() needs to initialze it (delay.cpp):
+event manager. As a result, the main() needs to initialze it (loop.cpp):
 
 ```cpp
 int main(int argc, char **argv) {
@@ -366,13 +366,7 @@ int main(int argc, char **argv) {
   g_random = new DeterministicRandom(randomSeed);
   g_nondeterministic_random = new DeterministicRandom(platform::getRandomSeed());
   g_network = newNet2( NetworkAddress(), false );
-
-  RUN_TEST(delayTest);
-  cout << "delayTest running... (expecting 5s delay)\n";
-  g_network->run();
-  cout << "delayTest existing...\n";
-
-  return 0;
+  ... (elided)
 }
 ```
 
@@ -407,7 +401,7 @@ ACTOR void delayTest() {
 Results are:
 
 ```bash
-# ./delay
+# ./loop delay
 Running delayTest...
 
 delayTest running... (expecting 5s delay)
@@ -449,7 +443,8 @@ ACTOR Future<Void> infinite_loop() {
 ```
 
 In the above example, instead of existing after 0.01 seconds, there is an
-infinite loop printing out messages. Run the "loop" example to see the output.
+infinite loop printing out messages. Run the "./loop delay" command to see
+the output.
 
 The reason is "onChange" is set to a Void outside the loop, so the first time
 inside the loop, the condition "wait(onChange)" immediately returns. Inside the
