@@ -49,7 +49,7 @@ calc: calc.o calc.actor.g.o
 void: void.o void.actor.g.o
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ $(LFLAGS) -o $@ $(LDFLAGS)
 
-loop: loop.o loop.actor.g.o delay.actor.g.o
+loop: loop.o loop.actor.g.o delay.actor.g.o broken.actor.g.o
 	$(CXX) $(CXXFLAGS) $(INCLUDE) $^ $(LFLAGS) -o $@ $(LDFLAGS)
 
 dsltest: dsltest.o dsltest.actor.g.o

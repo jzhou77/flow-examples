@@ -451,3 +451,76 @@ inside the loop, the condition "wait(onChange)" immediately returns. Inside the
 block, "onChange" is not reset to Never() or another future. As a result, the
 next run of the loop sees "onChange" and enter the block again and again. This
 causes an infinite loop and we never exit the infinite_loop().
+
+### Broken promise is an error
+
+Promise() in flow is interesting. Internally, it uses struct SAV that maintains
+two counters, one for the number of promises and one for the number of futures.
+Whenever Promise::getFuture() is called, the counter for futures increases by
+one. If we are destorying a promise and there are futures referencing this
+promise, then these futures will get a broken_promise() error.
+
+```cpp
+ACTOR Future<int> promise_broken(Future<int>* f) {
+  state Promise<int> p;
+
+  *f = p.getFuture();
+  wait(delay(0.1));
+  // Exiting without sending value results in broken promise.
+  // p.send(1);
+  return 2;
+}
+
+ACTOR Future<Void> brokenTest() {
+  try {
+    state Future<int> s;
+    state Future<int> f = promise_broken(&s);
+    loop choose {
+      when (int v = wait(f)) {
+        cout << "Got value from function " << v << endl;
+        f = Never();
+      }
+      when (int v = wait(s)) {
+        cout << "Got value from promise " << v << endl;
+        s = Never();
+      }
+    }
+  } catch (Error& err) {
+    cout << "Error: " << err.name() << endl;
+  }
+  g_network->stop();
+  return Void();
+}
+```
+
+Test run results are:
+
+```bash
+root@4f6ed515f435:/opt/foundation/foundationdb/flow-examples# ./loop broken
+Running brokenTest...
+
+brokenTest running... (expecting broken promise)
+Error: broken_promise
+brokenTest existing...
+```
+
+What happens is that the Promise "p" in promise_broken() only lives in the
+function. Once this function exits, "p" sets the internal "SAV" to a broken
+promise error.
+
+Note if Promise "p" send a value in promise_broken(), then the output is the
+following (no errors):
+
+```bash
+root@4f6ed515f435:/opt/foundation/foundationdb/flow-examples# ./loop broken
+Running brokenTest...
+
+brokenTest running... (expecting broken promise)
+Got value from promise 1
+Got value from function 2
+(... keep running for ever...)
+```
+
+See Promise, Future, and SAV implementations in
+[flow.h](https://github.com/apkar/foundationdb/blob/master/flow/flow.h).
+
