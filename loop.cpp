@@ -10,9 +10,10 @@ using namespace std;
 void loopTest();
 void delayTest();
 void brokenTest();
+void exceptTest();
 
 void usage(const char* program) {
-  cout << "Usage: " << program << " loop|delay|broken" << endl;
+  cout << "Usage: " << program << " loop|delay|broken|except" << endl;
 }
 
 int main(int argc, char **argv) {
@@ -35,6 +36,9 @@ int main(int argc, char **argv) {
   } else if (!strcmp(argv[1], "broken")) {
     RUN_TEST(brokenTest);
     cout << argv[1] << "Test running... (expecting broken promise)\n";
+  } else if (!strcmp(argv[1], "except")) {
+    RUN_TEST(exceptTest);
+    cout << argv[1] << "Test running... (expecting no exceptions being caught)\n";
   } else {
     usage(argv[0]);
     return -1;

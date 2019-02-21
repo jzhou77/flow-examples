@@ -452,6 +452,82 @@ block, "onChange" is not reset to Never() or another future. As a result, the
 next run of the loop sees "onChange" and enter the block again and again. This
 causes an infinite loop and we never exit the infinite_loop().
 
+### No wait, no catch
+
+Take a look at this example. Will exceptions raised from raise_exception() be
+caught in exceptTest()?
+
+```cpp
+
+ACTOR Future<int> raise_exception() {
+  wait(delay(0.1));
+  cout << "Throw exception in " << __FUNCTION__ << endl;
+  throw value_too_large();
+}
+
+ACTOR Future<Void> exceptTest() {
+  try {
+    state Future<int> s = raise_exception();
+    state Future<Void> f = delay(1.0);
+    loop choose {
+      when (wait(f)) {
+        break;
+      }
+      // No wait means no exceptions caught.
+      // when (int i = wait(s)) {}
+    }
+  } catch (Error& err) {
+    cout << "Caught error: " << err.name() << endl;
+  }
+  g_network->stop();
+  return Void();
+}
+```
+
+Surprisely, the answer is NO:
+
+```bash
+root@4f6ed515f435:/opt/foundation/foundationdb/flow-examples# ./loop except
+Running exceptTest...
+
+exceptTest running... (expecting no exceptions being caught)
+Throw exception in a_body1cont1
+exceptTest existing...
+```
+
+In order to catch the exception, we need to have a "wait" on future "s" in the
+exceptTest(). Uncomment the code in exceptTest(), then we can catch the
+exception (this time we see "Caught error: value_too_large"):
+
+```bash
+root@4f6ed515f435:/opt/foundation/foundationdb/flow-examples# ./loop except
+Running exceptTest...
+
+exceptTest running... (expecting no exceptions being caught)
+Throw exception in a_body1cont1
+Caught error: value_too_large
+exceptTest existing...
+```
+
+Typically, the code pattern to handle Futures returned by actors is to use an
+actor collection and wait on the actor collection:
+
+```cpp
+	state PromiseStream<Future<Void>> addActor;
+	state Future<Void> collection = actorCollection( self->addActor.getFuture() );
+
+	self->addActor.send( actor1() );
+	self->addActor.send( actor2() );
+
+  try {
+    loop choose {
+      ...
+      when (wait(collection) ) { ASSERT(false); throw internal_error(); }
+    }
+  } catch (Error& e) {...}
+```
+
+
 ### Broken promise is an error
 
 Promise() in flow is interesting. Internally, it uses struct SAV that maintains
