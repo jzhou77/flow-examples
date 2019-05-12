@@ -19,27 +19,6 @@ root@fce4696cc1b9:/opt/foundation/foundationdb/flow-examples# make
 
 Compilation on other platforms have not been attempted.
 
-### Compilation Problems
-
-```bash
-root@fce4696cc1b9:/opt/foundation/foundationdb/examples# make
-/opt/x-toolchain/bin/x86_64-nptl-linux-gnu-g++ -std=c++0x -I/opt/boost_1_52_0 -I/opt/foundation/foundationdb hello.o /opt/foundation/foundationdb/lib/libflow.a /opt/foundation/foundationdb/lib/libfdb_flow.a -Bstatic -ldl -lpthread -lrt -lfdb_c -Bdynamic  /opt/x-toolchain/x86_64-nptl-linux-gnu/lib64/libstdc++.a -lm -o hello -L/usr/local/lib -L/opt/foundation/foundationdb/lib -L/opt/x-toolchain/x86_64-nptl-linux-gnu/lib64/
-hello.o: In function `returnIfTrue(Future<bool>)':
-hello.cpp:(.text+0x134): undefined reference to `bool wait<bool>(Future<bool> const&)'
-hello.cpp:(.text+0x15e): undefined reference to `wait(Never const&)'
-hello.o: In function `shortCircuitAny(std::vector<Future<bool>, std::allocator<Future<bool> > >)':
-hello.cpp:(.text+0x2e6): undefined reference to `Void wait<Void>(Future<Void> const&)'
-hello.o: In function `Future<Void> tagError<Void>(Future<Void>, Error)':
-hello.cpp:(.text._Z8tagErrorI4VoidE6FutureIT_ES1_IS0_E5Error[_Z8tagErrorI4VoidE6FutureIT_ES1_IS0_E5Error]+0x1b): undefined reference to `Void wait<Void>(Future<Void> const&)'
-collect2: error: ld returned 1 exit status
-Makefile:35: recipe for target 'hello' failed
-make: *** [hello] Error 1
-```
-
-Seems this can be solved by putting a modified "flow" directory under "examples". Not sure why?
-
-TODO: add modified "flow"?
-
 ## Examples
 
 ### hello.cpp

@@ -5,12 +5,12 @@ ifeq ($(PLATFORM),Linux)
 CC = /opt/x-toolchain/bin/x86_64-nptl-linux-gnu-gcc
 CXX=/opt/x-toolchain/bin/x86_64-nptl-linux-gnu-g++
 MONO=/usr/bin/mono
-BOOSTDIR=/opt/boost_1_52_0
+BOOSTDIR=/opt/boost_1_67_0
 FDB=/opt/foundation/foundationdb
 ACTORCOMPILER=$(FDB)/bin/actorcompiler.exe
 
 CFLAGS += 
-CXXFLAGS += -std=c++0x -g
+CXXFLAGS += -std=c++14 -g -Wno-deprecated -DBOOST_ERROR_CODE_HEADER_ONLY -DBOOST_SYSTEM_NO_DEPRECATED -DUSE_UCONTEXT -DNO_INTELLISENSE
 INCLUDE = -I$(BOOSTDIR) -I$(FDB)
 LFLAGS = $(FDB)/lib/libflow.a $(FDB)/lib/libfdb_flow.a -Bstatic -ldl -lpthread -lrt -lfdb_c -Bdynamic  /opt/x-toolchain/x86_64-nptl-linux-gnu/lib64/libstdc++.a -lm
 LDFLAGS = -L/usr/local/lib -L$(FDB)/lib -L/opt/x-toolchain/x86_64-nptl-linux-gnu/lib64/
@@ -24,7 +24,7 @@ CFLAGS +=  -mmacosx-version-min=10.7 -stdlib=libc++
 LDFLAGS := -lflow -framework IOKit -framework CoreFoundation
 LFLAGS += -Lflow -F /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk/System/Library/Frameworks/IOKit.framework/
 
-INCLUDE = -I. -Iboost_1_52_0
+INCLUDE = -I. -Iboost_1_67_0
 CXXFLAGS += -g -std=c++11 -msse4.2 -Wno-undefined-var-template -Wno-unknown-warning-option
 endif
 
