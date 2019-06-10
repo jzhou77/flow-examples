@@ -46,9 +46,10 @@ void test_throw1() {
 }
 
 void test_throw2() {
-  Future<Void> result = throw2(true);
-  cout << "result = throw2(true), result.isReady() = " << result.isReady() << endl;
+  throw2(true);
+  cout << "void throw2(true) returned" << endl;
 }
+
 void test_throw3() {
   Future<Void> result = throw3(true);
   cout << "result = throw3(true), result.isReady() = " << result.isReady() << endl;
