@@ -5,19 +5,21 @@ examples are intended to learn the basics of the language.
 
 ## Compile
 
-This assumes that you have put the directory under the foundationdb folder and
-you have compiled foundationdb using the provided docker image, i.e.,
-"[build/Dockerfile](https://github.com/apkar/foundationdb/blob/master/build/Dockerfile)".
-
-To compile, enter the docker image
+This package requires Mono for compiling actor compiler and cmake>=3.12. On
+Ubuntu systems, Mono can be installed via:
 
 ```bash
-$ docker run --name DOCKERCONTAINER-36563  -v /Users/$USER/fdb/fdb-tools/scripts/../..:/opt/foundation:delegated -e FDB_TLS_PLUGIN=/opt/foundation/foundationdb/tls-plugins/FDBGnuTLS.so -e LOGNAME=$USER -e CCACHE_DIR=/opt/foundation/.ccache -e PYTHONPATH=/opt/foundation/foundationdb/bindings/python -e GOPATH=/opt/go -e LD_LIBRARY_PATH=/opt/foundation/foundationdb/lib -e LIBRARY_PATH=/usr/local/lib -e TLS_LIBDIR=/usr/local/lib -w /opt/foundation -u root --rm --init --privileged -it -e CC=/opt/x-toolchain/bin/x86_64-nptl-linux-gnu-gcc -e CXX=/opt/x-toolchain/bin/x86_64-nptl-linux-gnu-g++ docker.apple.com/cie_fdb/foundationdb-dev:0.8.7 bash
-root@fce4696cc1b9:/opt/foundation# cd foundationdb/flow-examples/
-root@fce4696cc1b9:/opt/foundation/foundationdb/flow-examples# make
+sudo apt install mono-mcs libmono-system-data4.0-cil libmono-system-xml-linq4.0-cil libmono-system-data-datasetextensions4.0-cil
 ```
 
-Compilation on other platforms have not been attempted.
+Actual building the package is as simple as:
+
+```bash
+mkdir build
+cd build
+cmake ../flow-examples
+make
+```
 
 ## Examples
 
