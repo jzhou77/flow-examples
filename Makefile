@@ -2,7 +2,7 @@ PLATFORM := $(shell uname)
 
 ifeq ($(PLATFORM),Linux)
 # set for docker image
-CC = /opt/x-toolchain/bin/x86_64-nptl-linux-gnu-gcc
+CC =/opt/x-toolchain/bin/x86_64-nptl-linux-gnu-gcc
 CXX=/opt/x-toolchain/bin/x86_64-nptl-linux-gnu-g++
 MONO=/usr/bin/mono
 BOOSTDIR=/opt/boost_1_67_0
@@ -12,7 +12,8 @@ ACTORCOMPILER=$(FDB)/bin/actorcompiler.exe
 CFLAGS += 
 CXXFLAGS += -std=c++14 -g -Wno-deprecated -DBOOST_ERROR_CODE_HEADER_ONLY -DBOOST_SYSTEM_NO_DEPRECATED -DUSE_UCONTEXT -DNO_INTELLISENSE
 INCLUDE = -I$(BOOSTDIR) -I$(FDB)
-LFLAGS = $(FDB)/lib/libflow.a $(FDB)/lib/libfdb_flow.a -Bstatic -ldl -lpthread -lrt -lfdb_c -Bdynamic  /opt/x-toolchain/x86_64-nptl-linux-gnu/lib64/libstdc++.a -lm
+LFLAGS = $(FDB)/lib/libflow.a -Bstatic -ldl -lpthread -lrt -lfdb_c -Bdynamic  /opt/x-toolchain/x86_64-nptl-linux-gnu/lib64/libstdc++.a -lm
+#LFLAGS = $(FDB)/lib/libflow.a $(FDB)/lib/libfdb_flow.a -Bstatic -ldl -lpthread -lrt -lfdb_c -Bdynamic  /opt/x-toolchain/x86_64-nptl-linux-gnu/lib64/libstdc++.a -lm
 LDFLAGS = -L/usr/local/lib -L$(FDB)/lib -L/opt/x-toolchain/x86_64-nptl-linux-gnu/lib64/
 
 
